@@ -1,0 +1,29 @@
+version: '3.11'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_web
+    ports:
+      - "8080:80"  # 将 Nginx 的 80 端口映射到主机的 8080 端口
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # 读取自定义的 Nginx 配置文件
+    depends_on:
+      - flask_app
+
+  flask_app:
+    build: .
+    container_name: flask_youtube_to_mp3
+    working_dir: /app
+    volumes:
+      - .:/app  # 挂载当前目录到容器内的 /app 目录
+    command: gunicorn --bind 0.0.0.0:19876 app:app
+    expose:
+      - "19876"  # 只暴露容器内部的 19876 端口，供 Nginx 访问
+
+  ffmpeg:
+    image: jrottenberg/ffmpeg:latest
+    container_name: ffmpeg_service
+    volumes:
+      - .:/app  # 挂载当前目录到容器内的 /app 目录
+    entrypoint: ["ffmpeg"]
